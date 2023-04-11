@@ -1,26 +1,34 @@
 import React, { useEffect, useState } from 'react';
 
-const Country = ({ country }) => {
-  const [weather, setWeather] = useState(null);
-  const API_KEY = '986331237ea749aa557b5681fc6bce24';
+const Country = ({ country, filteredCountries }) => {
+  const [weather, setWeather] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
+  const API_KEY = process.env.REACT_APP_API_KEY;
 
   function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
   useEffect(() => {
-    if (country) {
-      fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${country.latlng[0]}&lon=${country.latlng[1]}&appid=${API_KEY}&units=metric`
-      )
-        .then((res) => res.json())
-        .then((res) => setWeather(res));
+    if (filteredCountries.length === 1) {
+      fetchCountries();
     }
   }, [country]);
 
-  console.log('weather', weather);
+  const handleClick = (countryName) => {
+    fetchCountries();
+    setShowDetails(true);
+  };
 
-  return (
+  const fetchCountries = () => {
+    return fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${country.latlng[0]}&lon=${country.latlng[1]}&appid=${API_KEY}&units=metric`
+    )
+      .then((res) => res.json())
+      .then((res) => setWeather(res));
+  };
+
+  const countryDetails = (
     <div
       style={{
         display: 'flex',
@@ -28,7 +36,18 @@ const Country = ({ country }) => {
         alignItems: 'flex-start'
       }}
     >
-      <p style={{ fontSize: '28px' }}>{country.name.common}</p>
+      <div style={{ display: 'flex', alignItems: 'center', marginLeft: 15 }}>
+        <p style={{ fontSize: '28px' }}>{country.name.common}</p>
+        {filteredCountries.length > 1 && (
+          <button
+            style={{ marginLeft: 15 }}
+            onClick={() => setShowDetails(false)}
+          >
+            close
+          </button>
+        )}
+      </div>
+
       <p>
         <strong>capital:</strong> {country.capital}
       </p>
@@ -50,17 +69,31 @@ const Country = ({ country }) => {
         alt="flag"
         src={country.flags.png}
       />
-      <p style={{ fontSize: '32px' }}>Weather in Helsinki</p>
+      <p style={{ fontSize: '32px' }}>Weather in {country.name.common}</p>
       <strong>temperature: </strong>
-      <span>{weather?.main.temp} Celsius</span>
-      <img
-        src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
-        alt="img"
-      />
-      {/* <p>
-        wind: <strong>{weather?.wind.speed}</strong>
-      </p> */}
+      <span>{weather?.main?.temp} Celsius</span>
+      {weather && (
+        <img
+          src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+          alt="img"
+        />
+      )}
+
+      <p>wind: {weather?.wind?.speed} m/s</p>
     </div>
+  );
+
+  return (
+    <li>
+      {filteredCountries.length > 1 && !showDetails ? (
+        <>
+          {country.name.common}
+          <button onClick={() => handleClick(country)}>show</button>
+        </>
+      ) : (
+        countryDetails
+      )}
+    </li>
   );
 };
 
