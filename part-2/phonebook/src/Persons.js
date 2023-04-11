@@ -1,11 +1,11 @@
 import React from 'react';
 import Person from './Person';
 
-const Persons = ({ filteredNames }) => {
+const Persons = ({ filteredNames, deletePerson }) => {
   return filteredNames.length ? (
     <ul>
       {filteredNames.map((person) => (
-        <Person key={person.id} person={person} />
+        <Person deletePerson={deletePerson} key={person.id} person={person} />
       ))}
     </ul>
   ) : (
