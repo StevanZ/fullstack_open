@@ -1,3 +1,10 @@
 {
-  "cSpell.words": ["Phonebook"]
+  "cSpell.words": [
+    "Phonebook"
+  ],
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#302C37",
+    "titleBar.activeBackground": "#433D4D",
+    "titleBar.activeForeground": "#FAFAFB"
+  }
 }
