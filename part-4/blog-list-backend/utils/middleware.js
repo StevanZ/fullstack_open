@@ -1,4 +1,6 @@
+const User = require('../models/user');
 const logger = require('../utils/logger');
+const jwt = require('jsonwebtoken');
 
 const requestLogger = (request, response, next) => {
   logger.info('Method:', request.method);
@@ -15,17 +17,52 @@ const unknownEndpoint = (request, response) => {
 const errorHandler = (error, request, response, next) => {
   logger.error(error.message);
 
-  if (error.name === 'CastError') {
+  if (error.name === 'JsonWebTokenError') {
+    return response.status(401).json({
+      error: 'Unauthorized! Please login!'
+    });
+  } else if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' });
   } else if (error.name === 'ValidationError') {
     return response.status(400).json({ error: error.message });
+  } else if (error.name === 'JsonWebTokenError') {
+    return response.status(400).json({ error: error.message });
+  } else if (error.name === 'TokenExpiredError') {
+    return response.status(401).json({
+      error: 'token expired'
+    });
   }
 
   next(error);
 };
 
+const userExtractor = async (request, response, next) => {
+  let token = request.get('authorization');
+
+  if (token && token.startsWith('Bearer ')) {
+    token = token.replace('Bearer ', '');
+  }
+
+  if (token) {
+    const decodedToken = jwt.verify(token, process.env.SECRET);
+
+    if (!decodedToken.id) {
+      return response.status(401).json({
+        error: 'Invalid token'
+      });
+    }
+
+    const user = await User.findById(decodedToken.id);
+
+    request.user = user;
+  }
+
+  next();
+};
+
 module.exports = {
   unknownEndpoint,
   requestLogger,
-  errorHandler
+  errorHandler,
+  userExtractor
 };
